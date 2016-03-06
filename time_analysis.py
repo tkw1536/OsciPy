@@ -69,12 +69,13 @@ def generate_sync_matrix(sols):
     for sol in sols:
         mat.append([])
         for osol in sols:
-            offset = 0
-            diff = abs(sol[offset:] - osol[offset:])
+            diff = abs(sol - osol)
             ind = None
 
-            for i, e in enumerate(diff):
-                if np.isclose(e, 0, atol=0.1):
+            step_size = 50
+            for i in range(0, len(diff), step_size):
+                chunk = diff[i:i+step_size]
+                if np.isclose(np.sum(chunk), 0, atol=0.05):
                     ind = i
                     break
 

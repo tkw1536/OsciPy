@@ -22,7 +22,7 @@ def generate_system(omega_vec, A):
         return np.array(ode)
     return func
 
-def solve_system(O, A, tmax=20, dt=0.01):
+def solve_system(O, A, tmax=30, dt=0.01):
     """ Solve particular configuration
     """
     func = generate_system(O, A)
