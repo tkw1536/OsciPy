@@ -22,7 +22,7 @@ def compute_correlation_matrix(sols):
     return cmat
 
 def simulate_system(size, reps=10):
-    """ Show system evolution for different adjacency matrices
+    """ Have fun :-)
     """
     graph = generate_graph_paper() #generate_graph(size)
 
