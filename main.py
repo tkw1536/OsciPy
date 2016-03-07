@@ -21,7 +21,7 @@ def compute_correlation_matrix(sols):
             cmat[i, j] = np.cos(sol - osol)
     return cmat
 
-def simulate_system(size, reps=10):
+def simulate_system(size, reps=150):
     """ Have fun :-)
     """
     graph = generate_graph_paper() #generate_graph(size)
