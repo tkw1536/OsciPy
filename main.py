@@ -28,30 +28,19 @@ def compute_dcm(corr_mat):
     for thres in [0.9]: #np.linspace(0, 1, 5):
         cur_mat = corr_mat > thres
         dcm.append(cur_mat)
-
     return dcm[0]
 
 def compute_sync_time(dcm, ts):
     """ Compute time it takes to synchronize from DCM
     """
-    print(dcm.shape)
-    print(dcm.T.shape)
-
     sync_time = -np.ones((dcm.shape[0], dcm.shape[0]))
     for t, state in enumerate(dcm.T):
-        #inds = set([(i, j) for i,j in zip(*np.nonzero(state))])
-        #ncl = set([(i, j) for i,j in np.argwhere(sync_time < 0)])
-        #sel = list(zip(*inds.union(ncl)))
-        #sync_time[sel] = t
-
-        for i in range(state.shape[0]):
-            for j in range(state.shape[1]):
-                if state[i,j] == 1 and sync_time[i,j] < 0:
-                    sync_time[i,j] = ts[t]
-
+        inds = np.argwhere((state == 1) & (sync_time < 0))
+        for i,j in inds:
+            sync_time[i,j] = ts[t]
     return sync_time
 
-def simulate_system(size, reps=15):
+def simulate_system(size, reps=50):
     """ Have fun :-)
     """
     graph = generate_graph(size)
