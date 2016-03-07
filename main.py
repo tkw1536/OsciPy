@@ -55,7 +55,7 @@ def simulate_system(size, reps=50):
         mats.append(corr_mat)
     mats = np.array(mats)
 
-    mean_time = np.mean(mats, axis=0) # average all repretitions
+    mean_time = np.mean(mats, axis=0) # average all repetitions
     dcm = compute_dcm(mean_time)
     sync_time = compute_sync_time(dcm, ts)
     print(sync_time)
