@@ -56,7 +56,7 @@ def plot_correlation_matrix(cmat, ts, ax):
         for j, sol in enumerate(row):
             ax.plot(ts, sol, label='{},{}'.format(i, j))
 
-    ax.set_xlabel('t')
+    ax.set_xlabel(r'$t$')
     ax.set_ylabel(r'$\langle \cos \left(\Theta_i(t) - \Theta_j(t)\right)\rangle$')
     ax.set_ylim((-1, 1.1))
 
