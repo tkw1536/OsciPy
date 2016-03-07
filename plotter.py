@@ -5,8 +5,9 @@ All functions related to plotting
 import numpy as np
 import networkx as nx
 
-import matplotlib.pylab as plt
 import matplotlib as mpl
+import matplotlib.pylab as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 def plot_matrix(mat, ax):
@@ -15,7 +16,10 @@ def plot_matrix(mat, ax):
     im = ax.imshow(
         mat,
         interpolation='nearest', cmap=plt.cm.coolwarm)
-    plt.colorbar(im, ax=ax)
+
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes('right', size='5%', pad=0.2)
+    plt.colorbar(im, cax=cax)
 
     ax.set_xlabel(r'$i$')
     ax.set_ylabel(r'$j$')
