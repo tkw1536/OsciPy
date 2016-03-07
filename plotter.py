@@ -20,6 +20,8 @@ def plot_matrix(mat, ax):
     ax.set_xlabel(r'$i$')
     ax.set_ylabel(r'$j$')
 
+    ax.set_title('Sign-switch of dynamic connectivity matrix')
+
 def plot_graph(graph, ax):
     """ Plot graph
     """
