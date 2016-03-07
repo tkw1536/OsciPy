@@ -2,14 +2,11 @@
 All functions related to plotting
 """
 
-import io
-
 import numpy as np
 import networkx as nx
 
 import matplotlib.pylab as plt
 import matplotlib as mpl
-import matplotlib.image as mpimg
 
 
 def plot_matrix(mat, ax):
@@ -26,12 +23,21 @@ def plot_matrix(mat, ax):
 def plot_graph(graph, ax):
     """ Plot graph
     """
-    pydot_graph = nx.nx_pydot.to_pydot(graph)
-    png_str = pydot_graph.create_png(prog=['dot', '-Gdpi=300'])
-    img = mpimg.imread(io.BytesIO(png_str))
+    # generate some node properties
+    labels = {}
+    for n in graph.nodes():
+        labels[n] = n
 
-    ax.imshow(img, aspect='equal')
-    ax.axis('off')
+    # compute layout
+    pos = nx.nx_pydot.graphviz_layout(graph, prog='neato')
+
+    # draw graph
+    nx.draw(
+        graph, pos,
+        node_color='lightskyblue', node_size=800,
+        font_size=20,
+        ax=ax)
+    nx.draw_networkx_labels(graph, pos, labels)
 
 def plot_evolutions(sols, ts, ax):
     """ Plot system evolution
