@@ -41,7 +41,7 @@ def plot_evolutions(sols, ts, ax):
     """ Plot system evolution
     """
     for i, sol in enumerate(sols):
-        ax.plot(sol, label=r'$f_{{{}}}$'.format(i))
+        ax.plot(ts, sol, label=r'$f_{{{}}}$'.format(i))
 
     ax.set_xlabel(r'$t$')
     ax.set_ylabel(r'$\Theta_i$')
@@ -49,18 +49,18 @@ def plot_evolutions(sols, ts, ax):
     ax.set_ylim((0, 2*np.pi))
     #ax.legend(loc='best')
 
-def plot_correlation_matrix(cmat, ax):
+def plot_correlation_matrix(cmat, ts, ax):
     """ Plot individual correlation matrix
     """
     for i, row in enumerate(cmat):
         for j, sol in enumerate(row):
-            ax.plot(sol, label='{},{}'.format(i, j))
+            ax.plot(ts, sol, label='{},{}'.format(i, j))
 
     ax.set_xlabel('t')
     ax.set_ylabel(r'$\langle \cos \left(\Theta_i(t) - \Theta_j(t)\right)\rangle$')
     ax.set_ylim((-1, 1.1))
 
-def plot_result(graph, mat, cmat, evo):
+def plot_result(graph, mat, cmat, sols, ts):
     """ Plot final result
     """
     fig = plt.figure(figsize=(30, 10))
@@ -68,8 +68,8 @@ def plot_result(graph, mat, cmat, evo):
 
     plot_graph(graph, plt.subplot(gs[:, 0]))
     plot_matrix(mat, plt.subplot(gs[:, 1]))
-    plot_evolutions(*evo, plt.subplot(gs[0, 2]))
-    plot_correlation_matrix(cmat, plt.subplot(gs[1, 2]))
+    plot_evolutions(sols, ts, plt.subplot(gs[0, 2]))
+    plot_correlation_matrix(cmat, ts, plt.subplot(gs[1, 2]))
 
     fig.savefig('result.pdf', dpi=300)
     fig.savefig('foo.png')
@@ -123,7 +123,7 @@ def simulate_system(size, reps=10):
     graph = generate_graph_paper() #generate_graph(size)
 
     adjacency_matrix = nx.to_numpy_matrix(graph)
-    omega_vec = np.ones((len(graph.nodes()),)) * 0.3
+    omega_vec = np.ones((len(graph.nodes()),)) * 2
 
     mats = []
     for _ in trange(reps):
@@ -135,7 +135,7 @@ def simulate_system(size, reps=10):
     mean_time = np.mean(mats, axis=0)
     time_sum = np.sum(mean_time, axis=2)
 
-    plot_result(graph, time_sum, mean_time, (sols.T, ts))
+    plot_result(graph, time_sum, mean_time, sols.T, ts)
 
 def main():
     """ General interface
