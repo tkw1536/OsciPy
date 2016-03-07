@@ -75,5 +75,6 @@ def plot_result(graph, mat, cmat, sols, ts):
     plot_evolutions(sols, ts, plt.subplot(gs[0, 2]))
     plot_correlation_matrix(cmat, ts, plt.subplot(gs[1, 2]))
 
+    plt.tight_layout()
     fig.savefig('result.pdf', dpi=300)
     fig.savefig('foo.png')
