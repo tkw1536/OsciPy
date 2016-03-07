@@ -28,7 +28,7 @@ def generate_graph(size):
 
     return graph
 
-def generate_graph_paper():
+def generate_paper_graph():
     graph = nx.Graph()
     graph.add_edges_from([
         (2,6),(6,7),(7,2),
