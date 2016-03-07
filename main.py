@@ -31,7 +31,7 @@ def compute_dcm(corr_mat):
 
     return dcm[0]
 
-def compute_sync_time(dcm):
+def compute_sync_time(dcm, ts):
     """ Compute time it takes to synchronize from DCM
     """
     print(dcm.shape)
@@ -47,7 +47,7 @@ def compute_sync_time(dcm):
         for i in range(state.shape[0]):
             for j in range(state.shape[1]):
                 if state[i,j] == 1 and sync_time[i,j] < 0:
-                    sync_time[i,j] = t
+                    sync_time[i,j] = ts[t]
 
     return sync_time
 
@@ -68,7 +68,7 @@ def simulate_system(size, reps=15):
 
     mean_time = np.mean(mats, axis=0) # average all repretitions
     dcm = compute_dcm(mean_time)
-    sync_time = compute_sync_time(dcm)
+    sync_time = compute_sync_time(dcm, ts)
     print(sync_time)
 
     plot_result(graph, sync_time, mean_time, sols.T, ts)
