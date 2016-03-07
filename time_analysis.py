@@ -3,7 +3,6 @@ Investigate how long synchronization between individual cells takes
 """
 
 import io
-import collections
 
 import numpy as np
 import networkx as nx
@@ -123,10 +122,20 @@ def generate_graph(size):
 
     return graph
 
-def simulate_system(size):
+def generate_graph_paper():
+    graph = nx.Graph()
+    graph.add_edges_from([
+        (2,6),(6,7),(7,2),
+        (1,4),(4,5),(5,1),
+        (3,8),(8,9),(9,3),
+        (2,1),(6,1),(7,1),
+        (3,1),(8,1),(9,1)
+    ])
+    return graph
+
     """ Show system evolution for different adjacency matrices
     """
-    graph = generate_graph(size)
+    graph = generate_graph_paper() #generate_graph(size)
 
     adjacency_matrix = nx.to_numpy_matrix(graph)
     omega_vec = np.ones((len(graph.nodes()),)) * 0.3
