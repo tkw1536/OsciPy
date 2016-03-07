@@ -11,19 +11,21 @@ import matplotlib.pylab as plt
 import matplotlib as mpl
 import matplotlib.image as mpimg
 
+from tqdm import trange
+
 from utils import solve_system
 
 
 def plot_matrix(mat, ax):
     """ Plot system evolution
     """
-    im = ax.imshow(mat, interpolation='nearest')
+    im = ax.imshow(
+        mat,
+        interpolation='nearest', cmap=plt.cm.coolwarm)
     plt.colorbar(im, ax=ax)
 
     ax.set_xlabel(r'$i$')
     ax.set_ylabel(r'$j$')
-
-    ax.set_title('Synchronization duration')
 
 def plot_graph(graph, ax):
     """ Plot graph
@@ -35,69 +37,51 @@ def plot_graph(graph, ax):
     ax.imshow(img, aspect='equal')
     ax.axis('off')
 
-def plot_evolutions(sols, ts, join_events, ax):
+def plot_evolutions(sols, ts, ax):
     """ Plot system evolution
     """
     for i, sol in enumerate(sols):
         ax.plot(sol, label=r'$f_{{{}}}$'.format(i))
 
-    for jev_x in join_events:
-        ax.axvline(jev_x, color='r', alpha=0.5, ls='dashed')
-
     ax.set_xlabel(r'$t$')
     ax.set_ylabel(r'$\Theta_i$')
 
     ax.set_ylim((0, 2*np.pi))
-    ax.legend(loc='best')
+    #ax.legend(loc='best')
 
-def plot_result(graph, mat, evo):
+def plot_correlation_matrix(cmat, ax):
+    """ Plot individual correlation matrix
+    """
+    for i, row in enumerate(cmat):
+        for j, sol in enumerate(row):
+            ax.plot(sol, label='{},{}'.format(i, j))
+
+    ax.set_xlabel('t')
+    ax.set_ylabel(r'$\langle \cos \left(\Theta_i(t) - \Theta_j(t)\right)\rangle$')
+    ax.set_ylim((-1, 1.1))
+
+def plot_result(graph, mat, cmat, evo):
     """ Plot final result
     """
     fig = plt.figure(figsize=(30, 10))
-    gs = mpl.gridspec.GridSpec(1, 3, width_ratios=[1, 1, 2])
+    gs = mpl.gridspec.GridSpec(2, 3, width_ratios=[1, 1, 2])
 
-    plot_graph(graph, plt.subplot(gs[0]))
-    plot_matrix(mat, plt.subplot(gs[1]))
-    plot_evolutions(*evo, plt.subplot(gs[2]))
+    plot_graph(graph, plt.subplot(gs[:, 0]))
+    plot_matrix(mat, plt.subplot(gs[:, 1]))
+    plot_evolutions(*evo, plt.subplot(gs[0, 2]))
+    plot_correlation_matrix(cmat, plt.subplot(gs[1, 2]))
 
     fig.savefig('result.pdf', dpi=300)
     fig.savefig('foo.png')
 
-def generate_sync_matrix(sols):
-    """ Generate matrix with synchronization time in each cell
+def compute_correlation_matrix(sols):
+    """ Compute correlations as described in paper
     """
-    node_num = sols.shape[1]
-    mat = np.ones((node_num, node_num))
-    join_events = []
-    already_clustered = []
-    cluster_groups = collections.defaultdict(list)
-
-    res = []
-    step_size = 50
-    for series in sols.T:#np.diff(sols, axis=0).T:
-        res.append([])
-        for i in range(0, len(series), step_size):
-            res[-1].append(np.mean(series[i:i+step_size]))
-    res = np.array(res).T
-    max_len = res.shape[0]
-
-    for t, state in enumerate(res):
-        for i, i_val in enumerate(state):
-            if i in already_clustered: continue
-            for j, j_val in enumerate(state):
-                if i >= j or j in already_clustered: continue
-
-                if np.isclose(i_val, j_val):
-                    print('->', i, j, t, max_len)
-                    for n in [j]:
-                        mat[i, n] = t / max_len
-                        mat[n, i] = mat[i, n]
-
-                    already_clustered.append(j)
-                    cluster_groups[i].append(j)
-                    join_events.append(t * step_size)
-
-    return mat, join_events
+    cmat = np.empty((sols.shape[0], sols.shape[0], sols.shape[1]))
+    for i, sol in enumerate(sols):
+        for j, osol in enumerate(sols):
+            cmat[i, j] = np.cos(sol - osol)
+    return cmat
 
 def generate_graph(size):
     """ Generate graph with clusters
@@ -133,6 +117,7 @@ def generate_graph_paper():
     ])
     return graph
 
+def simulate_system(size, reps=10):
     """ Show system evolution for different adjacency matrices
     """
     graph = generate_graph_paper() #generate_graph(size)
@@ -140,10 +125,17 @@ def generate_graph_paper():
     adjacency_matrix = nx.to_numpy_matrix(graph)
     omega_vec = np.ones((len(graph.nodes()),)) * 0.3
 
-    sols, ts = solve_system(omega_vec, adjacency_matrix)
-    mat, jevs = generate_sync_matrix(sols)
+    mats = []
+    for _ in trange(reps):
+        sols, ts = solve_system(omega_vec, adjacency_matrix)
+        corr_mat = compute_correlation_matrix(sols.T)
+        mats.append(corr_mat)
+    mats = np.array(mats)
 
-    plot_result(graph, mat, (sols.T, ts, jevs))
+    mean_time = np.mean(mats, axis=0)
+    time_sum = np.sum(mean_time, axis=2)
+
+    plot_result(graph, time_sum, mean_time, (sols.T, ts))
 
 def main():
     """ General interface
