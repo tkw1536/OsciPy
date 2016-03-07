@@ -28,6 +28,7 @@ def solve_system(O, A, tmax=30, dt=0.01):
     func = generate_system(O, A)
 
     ts = np.arange(0, tmax, dt)
+    npr.seed(42)
     init = npr.uniform(0, 2*np.pi, size=O.shape)
 
     sol = odeint(func, init, ts)

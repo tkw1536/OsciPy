@@ -3,6 +3,7 @@ Investigate how long synchronization between individual cells takes
 """
 
 import io
+import collections
 
 import numpy as np
 import networkx as nx
@@ -35,11 +36,14 @@ def plot_graph(graph, ax):
     ax.imshow(img, aspect='equal')
     ax.axis('off')
 
-def plot_evolutions(sols, ts, ax):
+def plot_evolutions(sols, ts, join_events, ax):
     """ Plot system evolution
     """
     for i, sol in enumerate(sols):
-        ax.plot(ts, sol, label=r'$f_{{{}}}$'.format(i))
+        ax.plot(sol, label=r'$f_{{{}}}$'.format(i))
+
+    for jev_x in join_events:
+        ax.axvline(jev_x, color='r', alpha=0.5, ls='dashed')
 
     ax.set_xlabel(r'$t$')
     ax.set_ylabel(r'$\Theta_i$')
@@ -63,29 +67,38 @@ def plot_result(graph, mat, evo):
 def generate_sync_matrix(sols):
     """ Generate matrix with synchronization time in each cell
     """
-    max_len = len(sols[0])
+    node_num = sols.shape[1]
+    mat = np.ones((node_num, node_num))
+    join_events = []
+    already_clustered = []
+    cluster_groups = collections.defaultdict(list)
 
-    mat = []
-    for sol in sols:
-        mat.append([])
-        for osol in sols:
-            diff = abs(sol - osol)
-            ind = None
+    res = []
+    step_size = 50
+    for series in sols.T:#np.diff(sols, axis=0).T:
+        res.append([])
+        for i in range(0, len(series), step_size):
+            res[-1].append(np.mean(series[i:i+step_size]))
+    res = np.array(res).T
+    max_len = res.shape[0]
 
-            step_size = 50
-            for i in range(0, len(diff), step_size):
-                chunk = diff[i:i+step_size]
-                if np.isclose(np.sum(chunk), 0, atol=0.05):
-                    ind = i
-                    break
+    for t, state in enumerate(res):
+        for i, i_val in enumerate(state):
+            if i in already_clustered: continue
+            for j, j_val in enumerate(state):
+                if i >= j or j in already_clustered: continue
 
-            if ind is None:
-                ind = max_len
+                if np.isclose(i_val, j_val):
+                    print('->', i, j, t, max_len)
+                    for n in [j]:
+                        mat[i, n] = t / max_len
+                        mat[n, i] = mat[i, n]
 
-            dur = ind / max_len
-            mat[-1].append(dur)
+                    already_clustered.append(j)
+                    cluster_groups[i].append(j)
+                    join_events.append(t * step_size)
 
-    return np.array(mat)
+    return mat, join_events
 
 def generate_graph(size):
     """ Generate graph with clusters
@@ -119,9 +132,9 @@ def simulate_system(size):
     omega_vec = np.ones((len(graph.nodes()),)) * 0.3
 
     sols, ts = solve_system(omega_vec, adjacency_matrix)
-    mat = generate_sync_matrix(sols.T)
+    mat, jevs = generate_sync_matrix(sols)
 
-    plot_result(graph, mat, (sols.T, ts))
+    plot_result(graph, mat, (sols.T, ts, jevs))
 
 def main():
     """ General interface
