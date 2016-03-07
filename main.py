@@ -36,8 +36,7 @@ def compute_sync_time(dcm, ts):
     sync_time = -np.ones((dcm.shape[0], dcm.shape[0]))
     for t, state in enumerate(dcm.T):
         inds = np.argwhere((state == 1) & (sync_time < 0))
-        for i,j in inds:
-            sync_time[i,j] = ts[t]
+        sync_time[tuple(inds.T)] = ts[t]
     return sync_time
 
 def simulate_system(size, reps=50):
