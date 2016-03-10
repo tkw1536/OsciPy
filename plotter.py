@@ -80,5 +80,5 @@ def plot_result(graph, mat, cmat, sols, ts):
     plot_correlation_matrix(cmat, ts, plt.subplot(gs[1, 2]))
 
     plt.tight_layout()
-    fig.savefig('result.pdf', dpi=300)
+    fig.savefig('result.pdf')
     fig.savefig('foo.png')

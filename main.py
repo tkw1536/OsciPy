@@ -13,7 +13,7 @@ from generators import *
 
 
 def compute_correlation_matrix(sols):
-    """ Compute correlations as described in paper
+    """ Compute pairwise node-correlations of solution
     """
     cmat = np.empty((sols.shape[0], sols.shape[0], sols.shape[1]))
     for i, sol in enumerate(sols):
@@ -39,10 +39,28 @@ def compute_sync_time(dcm, ts):
         sync_time[tuple(inds.T)] = ts[t]
     return sync_time
 
+def investigate_laplacian(graph):
+    """ Compute Laplacian
+    """
+    w = nx.laplacian_spectrum(graph)
+
+    pairs = []
+    for i, w in enumerate(sorted(w)):
+        if abs(w) < 1e-5: continue
+        inv_w = 1 / w
+        pairs.append((inv_w, i))
+
+    plt.figure()
+    plt.scatter(*zip(*pairs))
+    plt.xlabel(r'$\frac{1}{\lambda_i}$')
+    plt.ylabel(r'rank index')
+    plt.savefig('le_spectrum.pdf')
+
 def simulate_system(size, reps=50):
     """ Have fun :-)
     """
     graph = generate_graph(size)
+    investigate_laplacian(graph)
 
     adjacency_matrix = nx.to_numpy_matrix(graph)
     omega_vec = np.ones((len(graph.nodes()),)) * 2

@@ -29,6 +29,8 @@ def generate_graph(size):
     return graph
 
 def generate_paper_graph():
+    """ Generate graph from figure 3 of A. Arenas et al. / Physica D 224 (2006)
+    """
     graph = nx.Graph()
     graph.add_edges_from([
         (1,5),(5,6),(6,1),
