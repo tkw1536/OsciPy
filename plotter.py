@@ -68,17 +68,36 @@ def plot_correlation_matrix(cmat, ts, ax):
     ax.set_ylabel(r'$\langle \cos \left(\Theta_i(t) - \Theta_j(t)\right)\rangle$')
     ax.set_ylim((-1, 1.1))
 
-def plot_result(graph, mat, cmat, sols, ts):
+def plot_series(series, ts, ax):
+    """ Plot single time series
+    """
+    ax.plot(ts, series)
+
+    ax.set_xlabel(r'$t$')
+    ax.set_ylabel(r'$\sum_{ij} \sin\left( \theta_i - \theta_j \right)^2$')
+
+def plot_result(data):
     """ Plot final result
     """
+    # main overview
     fig = plt.figure(figsize=(30, 10))
     gs = mpl.gridspec.GridSpec(2, 3, width_ratios=[1, 1, 2])
 
-    plot_graph(graph, plt.subplot(gs[:, 0]))
-    plot_matrix(mat, plt.subplot(gs[:, 1]))
-    plot_evolutions(sols, ts, plt.subplot(gs[0, 2]))
-    plot_correlation_matrix(cmat, ts, plt.subplot(gs[1, 2]))
+    plot_graph(data.graph, plt.subplot(gs[:, 0]))
+    plot_matrix(data.syncs, plt.subplot(gs[:, 1]))
+    plot_evolutions(data.sol, data.ts, plt.subplot(gs[0, 2]))
+    plot_correlation_matrix(data.cmats, data.ts, plt.subplot(gs[1, 2]))
 
     plt.tight_layout()
     fig.savefig('result.pdf')
     fig.savefig('foo.png')
+
+    # variance investigation
+    fig = plt.figure(figsize=(20, 10))
+    gs = mpl.gridspec.GridSpec(2, 1)
+
+    plot_evolutions(data.sol, data.ts, plt.subplot(gs[0]))
+    plot_series(data.vser, data.ts, plt.subplot(gs[1]))
+
+    plt.tight_layout()
+    fig.savefig('variances.pdf')

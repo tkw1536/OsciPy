@@ -7,7 +7,7 @@ import networkx as nx
 
 from tqdm import trange
 
-from utils import solve_system
+from utils import solve_system, DictWrapper
 from plotter import *
 from generators import *
 
@@ -39,6 +39,18 @@ def compute_sync_time(dcm, ts):
         sync_time[tuple(inds.T)] = ts[t]
     return sync_time
 
+def compute_variance_series(sols):
+    """ Compute pairwise node-variances of solution
+    """
+    sum_list = []
+    for t, state in enumerate(sols.T):
+        sin_sum = 0
+        for i_theta in state:
+            for j_theta in state:
+                sin_sum += np.sin(i_theta - j_theta)**2
+        sum_list.append(sin_sum)
+    return sum_list
+
 def investigate_laplacian(graph):
     """ Compute Laplacian
     """
@@ -65,19 +77,38 @@ def simulate_system(size, reps=50):
     adjacency_matrix = nx.to_numpy_matrix(graph)
     omega_vec = np.ones((len(graph.nodes()),)) * 2
 
-    mats = []
+    corr_mats = []
+    var_sers = []
     for _ in trange(reps):
         sols, ts = solve_system(omega_vec, adjacency_matrix)
-        corr_mat = compute_correlation_matrix(sols.T)
-        mats.append(corr_mat)
-    mats = np.array(mats)
 
-    mean_time = np.mean(mats, axis=0) # average all repetitions
+        cmat = compute_correlation_matrix(sols.T)
+        vser = compute_variance_series(sols.T)
+
+        corr_mats.append(cmat)
+        var_sers.append(vser)
+    corr_mats = np.array(corr_mats)
+    var_sers = np.array(var_sers)
+
+    # compute synchronization offsets
+    mean_time = np.mean(corr_mats, axis=0)
     dcm = compute_dcm(mean_time)
     sync_time = compute_sync_time(dcm, ts)
-    print(sync_time)
+    #print(sync_time)
 
-    plot_result(graph, sync_time, mean_time, sols.T, ts)
+    # further investigations
+    mean_var = np.mean(var_sers, axis=0)
+
+    # plot results
+    data = DictWrapper({
+        'graph': graph,
+        'syncs': sync_time,
+        'cmats': mean_time,
+        'sol': sols.T,
+        'ts': ts,
+        'vser': mean_var
+    })
+    plot_result(data)
 
 def main():
     """ General interface

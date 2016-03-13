@@ -8,6 +8,15 @@ import numpy.random as npr
 from scipy.integrate import odeint
 
 
+class DictWrapper(dict):
+    """ Dict with dot-notation access functionality
+    """
+    def __getattr__(self, attr):
+        return self.get(attr)
+
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+
 def generate_system(omega_vec, A):
     """ Generate generalized Kuramoto model
     """
