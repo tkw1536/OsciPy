@@ -39,17 +39,24 @@ def compute_sync_time(dcm, ts):
         sync_time[tuple(inds.T)] = ts[t]
     return sync_time
 
-def compute_variance_series(sols):
+def compute_cluster_num(sols, graph_size, thres=.05):
     """ Compute pairwise node-variances of solution
     """
-    sum_list = []
+    series = []
     for t, state in enumerate(sols.T):
+        # compute sine sum
         sin_sum = 0
         for i_theta in state:
             for j_theta in state:
-                sin_sum += np.sin(i_theta - j_theta)**2
-        sum_list.append(sin_sum)
-    return sum_list
+                sin = np.sin(i_theta - j_theta)**2
+                if sin > thres:
+                    sin_sum += sin
+
+        # compute actual value 'c'
+        c = graph_size**2 / (graph_size**2 - 2 * sin_sum)
+
+        series.append(c)
+    return series
 
 def investigate_laplacian(graph):
     """ Compute Laplacian
@@ -83,7 +90,7 @@ def simulate_system(size, reps=50):
         sols, ts = solve_system(omega_vec, adjacency_matrix)
 
         cmat = compute_correlation_matrix(sols.T)
-        vser = compute_variance_series(sols.T)
+        vser = compute_cluster_num(sols.T, len(graph.nodes()))
 
         corr_mats.append(cmat)
         var_sers.append(vser)

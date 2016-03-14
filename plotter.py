@@ -74,7 +74,7 @@ def plot_series(series, ts, ax):
     ax.plot(ts, series)
 
     ax.set_xlabel(r'$t$')
-    ax.set_ylabel(r'$\sum_{ij} \sin\left( \theta_i - \theta_j \right)^2$')
+    ax.set_ylabel(r'$\langle\frac{N^2}{N^2 - 2 \sum_{ij} \sin\left( \theta_i - \theta_j \right)^2}\rangle$')
 
 def plot_result(data):
     """ Plot final result
@@ -100,4 +100,5 @@ def plot_result(data):
     plot_series(data.vser, data.ts, plt.subplot(gs[1]))
 
     plt.tight_layout()
-    fig.savefig('variances.pdf')
+    fig.savefig('cluster_num.pdf')
+    fig.savefig('bar.png')
