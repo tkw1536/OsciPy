@@ -28,7 +28,18 @@ def generate_graph(size):
 
     return graph
 
-def generate_paper_graph():
+def generate_ring_graph(size):
+    """ Generate graph in rign structure
+    """
+    graph = nx.Graph()
+
+    for i in range(size-1):
+        graph.add_edge(i, i+1)
+    graph.add_edge(size-1, 0)
+
+    return graph
+
+def generate_paper_graph(_):
     """ Generate graph from figure 3 of A. Arenas et al. / Physica D 224 (2006)
     """
     graph = nx.Graph()
