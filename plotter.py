@@ -13,9 +13,12 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 def plot_matrix(mat, ax):
     """ Plot system evolution
     """
+    cmap = plt.cm.coolwarm
+    cmap.set_under('white')
+
     im = ax.imshow(
-        mat,
-        interpolation='nearest', cmap=plt.cm.coolwarm)
+        mat, vmin=0,
+        interpolation='nearest', cmap=cmap)
 
     divider = make_axes_locatable(ax)
     cax = divider.append_axes('right', size='5%', pad=0.2)
