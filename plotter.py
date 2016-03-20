@@ -51,14 +51,12 @@ def plot_graph(graph, ax):
 def plot_evolutions(sols, ts, ax):
     """ Plot system evolution
     """
-    for i, sol in enumerate(sols):
-        ax.plot(ts, sol, label=r'$f_{{{}}}$'.format(i))
+    ax.imshow(
+        sols, aspect='auto',
+        cmap=plt.cm.gray, interpolation='nearest')
 
     ax.set_xlabel(r'$t$')
     ax.set_ylabel(r'$\Theta_i$')
-
-    ax.set_ylim((0, 2*np.pi))
-    #ax.legend(loc='best')
 
 def plot_correlation_matrix(cmat, ts, ax):
     """ Plot individual correlation matrix
