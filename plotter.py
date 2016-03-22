@@ -38,11 +38,14 @@ def plot_graph(graph, ax):
         labels[n] = n
 
     # compute layout
-    pos = nx.nx_pydot.graphviz_layout(graph, prog='neato')
-
+    # TODO: Fix the proper layout
+    # pos = nx.nx_pydot.graphviz_layout(graph, prog='neato')
+    pos = nx.spring_layout(graph)
+    
     # draw graph
     nx.draw(
-        graph, pos,
+        graph,
+        pos, 
         node_color='lightskyblue', node_size=800,
         font_size=20,
         ax=ax)

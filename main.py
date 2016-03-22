@@ -2,15 +2,19 @@
 Investigate how long synchronization between individual cells takes
 """
 
+import sys
+
 import numpy as np
 import networkx as nx
 
 from tqdm import trange
 
 from utils import solve_system, DictWrapper
-from plotter import *
-from generators import *
 
+import plotter
+import generators
+
+import matplotlib.pylab as plt
 
 def compute_correlation_matrix(sols):
     """ Compute pairwise node-correlations of solution
@@ -78,7 +82,7 @@ def investigate_laplacian(graph):
 def simulate_system(size, reps=50):
     """ Have fun :-)
     """
-    graph = generate_graph(size)
+    graph = generators.generate_graph(size)
     investigate_laplacian(graph)
 
     adjacency_matrix = nx.to_numpy_matrix(graph)
@@ -115,12 +119,24 @@ def simulate_system(size, reps=50):
         'ts': ts,
         'vser': mean_var
     })
-    plot_result(data)
+    plotter.plot_result(data)
 
-def main():
-    """ General interface
+def main(args):
     """
+    Main entry point. 
+    
+    Arguments:
+        args
+            Arguments parsed to this function
+    Returns:
+        an integer representing the return code
+    """
+    
+    # just simulate the system
     simulate_system(4)
+    
+    # we always finish ok
+    return 0
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main(sys.argv[1:]))
