@@ -55,6 +55,11 @@ def plot_evolutions(sols, ts, ax):
         sols, aspect='auto',
         cmap=plt.cm.gray, interpolation='nearest')
 
+    # let x-labels correspond to actual time steps
+    ts = np.append(ts, ts[-1]+(ts[-1]-ts[-2]))
+    formatter = plt.FuncFormatter(lambda x, pos: int(ts[x]))
+    ax.xaxis.set_major_formatter(formatter)
+
     ax.set_xlabel(r'$t$')
     ax.set_ylabel(r'$\Theta_i$')
 
