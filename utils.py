@@ -40,7 +40,7 @@ def solve_system(conf, tmax=20, dt=0.01):
     ts = np.arange(0, tmax, dt)
     init = npr.uniform(0, 2*np.pi, size=conf.o_vec.shape)
 
-    sol = odeint(func, init, ts)
+    sol = odeint(func, init, ts).T
     sol %= 2*np.pi
 
     return sol, ts

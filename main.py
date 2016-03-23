@@ -13,12 +13,11 @@ from generators import *
 from investigations import *
 
 
-def simulate_system(size, reps=50):
-    """ Have fun :-)
+def setup_system(size=4):
+    """ All system configurations go here
     """
     # setup network
     graph = generate_graph(size)
-    investigate_laplacian(graph)
 
     # setup dynamical system
     omega = 0.2
@@ -31,36 +30,55 @@ def simulate_system(size, reps=50):
         'Phi': lambda t: OMEGA * t
     })
 
+    return DictWrapper({
+        'graph': graph,
+        'system_config': system_config
+    })
+
+def simulate_system(bundle, reps=50):
+    """ Generate data from system setup
+    """
+    # lonely investigation :'(
+    investigate_laplacian(bundle.graph)
+
     # solve system on network
     corr_mats = []
     var_sers = []
     for _ in trange(reps):
-        sols, ts = solve_system(system_config)
+        sols, ts = solve_system(bundle.system_config)
 
-        cmat = compute_correlation_matrix(sols.T)
-        vser = compute_cluster_num(sols.T, len(graph.nodes()))
+        cmat = compute_correlation_matrix(sols)
+        vser = compute_cluster_num(sols, len(bundle.graph.nodes()))
 
         corr_mats.append(cmat)
         var_sers.append(vser)
-    corr_mats = np.array(corr_mats)
-    var_sers = np.array(var_sers)
 
+    bundle['single_sol'] = sols
+    bundle['corr_mats'] = np.array(corr_mats)
+    bundle['var_sers'] = np.array(var_sers)
+    bundle['ts'] = ts
+
+    return bundle
+
+def handle_solution(bundle):
+    """ Investigate previously generated data
+    """
     # compute synchronization offsets
-    mean_time = np.mean(corr_mats, axis=0)
+    mean_time = np.mean(bundle.corr_mats, axis=0)
     dcm = compute_dcm(mean_time)
-    sync_time = compute_sync_time(dcm, ts)
+    sync_time = compute_sync_time(dcm, bundle.ts)
     #print(sync_time)
 
     # further investigations
-    mean_var = np.mean(var_sers, axis=0)
+    mean_var = np.mean(bundle.var_sers, axis=0)
 
     # plot results
     data = DictWrapper({
-        'graph': graph,
+        'graph': bundle.graph,
         'syncs': sync_time,
         'cmats': mean_time,
-        'sol': sols.T,
-        'ts': ts,
+        'sol': bundle.single_sol,
+        'ts': bundle.ts,
         'vser': mean_var
     })
     plot_result(data)
@@ -68,7 +86,10 @@ def simulate_system(size, reps=50):
 def main():
     """ General interface
     """
-    simulate_system(4)
+    bundle = setup_system()
+
+    bundle = simulate_system(bundle)
+    handle_solution(bundle)
 
 if __name__ == '__main__':
     main()
