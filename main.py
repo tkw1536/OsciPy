@@ -81,13 +81,20 @@ def simulate_system(size, reps=50):
     graph = generate_graph(size)
     investigate_laplacian(graph)
 
-    adjacency_matrix = nx.to_numpy_matrix(graph)
-    omega_vec = np.ones((len(graph.nodes()),)) * 2
+    omega = 0.2
+    OMEGA = 3
+    dim = len(graph.nodes())
+    system_config = DictWrapper({
+        'A': nx.to_numpy_matrix(graph),
+        'B': np.ones((dim,)),
+        'o_vec': np.ones((dim,)) * omega,
+        'Phi': lambda t: OMEGA * t
+    })
 
     corr_mats = []
     var_sers = []
     for _ in trange(reps):
-        sols, ts = solve_system(omega_vec, adjacency_matrix)
+        sols, ts = solve_system(system_config)
 
         cmat = compute_correlation_matrix(sols.T)
         vser = compute_cluster_num(sols.T, len(graph.nodes()))
