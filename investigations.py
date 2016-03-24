@@ -120,7 +120,7 @@ def reconstruct_coupling_params(bundle):
 
     # show result
     print('Original A:\n', c.A)
-    print('Reconstructed A:\n', x[:-c.A.shape[0]].reshape((2,2)))
+    print('Reconstructed A:\n', x[:-c.A.shape[0]].reshape(c.A.shape))
     print()
     print('Original B:', c.B)
     print('Reconstructed B:', x[-c.A.shape[0]:])

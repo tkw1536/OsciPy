@@ -27,7 +27,8 @@ def setup_system(size=4):
         'A': nx.to_numpy_matrix(graph),
         'B': np.ones((dim,)),
         'o_vec': np.ones((dim,)) * omega,
-        'Phi': lambda t: OMEGA * t
+        'Phi': lambda t: OMEGA * t,
+        'OMEGA': OMEGA
     })
 
     return DictWrapper({
