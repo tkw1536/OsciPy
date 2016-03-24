@@ -77,11 +77,10 @@ def reconstruct_coupling_params(bundle):
     """ Try to reconstruct A and B from observed data
     """
     c = bundle.system_config
-    dim = c.A.shape[0]**2 + c.A.shape[0]
 
     # aggregate solution data
-    aggr_sols = []
     sample_size = 200
+    aggr_sols = []
     for sol in bundle.all_sols:
         #t_points = random.sample(
         #    range(int(3/4*len(bundle.ts)), len(bundle.ts)), sample_size)
@@ -90,10 +89,13 @@ def reconstruct_coupling_params(bundle):
         slices = sol.T[t_points]
         aggr_sols.extend(zip(slices, bundle.ts[t_points]))
 
-    print('Using', len(aggr_sols), 'data points to solve system')
+    sol_dim = len(aggr_sols)
+    syst_dim = c.A.shape[0]**2 + c.A.shape[0]
+
+    print('Using', sol_dim, 'data points to solve system of', syst_dim, 'variables')
 
     # create coefficient matrix
-    a = np.empty((sample_size, dim))#, dtype='|S5')
+    a = np.empty((sol_dim, syst_dim))#, dtype='|S5')
     subs = list(itertools.product(range(c.A.shape[0]), repeat=2))
     for i in range(a.shape[0]):
         theta, t = aggr_sols.pop()
@@ -113,7 +115,7 @@ def reconstruct_coupling_params(bundle):
                     a[i, j] = 0
 
     # create LHS vector
-    b = np.ones(sample_size) * (c.OMEGA - c.o_vec[0])
+    b = np.ones(sol_dim) * (c.OMEGA - c.o_vec[0])
 
     # solve system
     x = np.linalg.lstsq(a, b)[0]
