@@ -2,6 +2,9 @@
 Bundle all functions together which investigate interesting properties
 """
 
+import random
+import itertools
+
 import numpy as np
 import networkx as nx
 import matplotlib.pylab as plt
@@ -69,3 +72,49 @@ def investigate_laplacian(graph):
     plt.xlabel(r'$\frac{1}{\lambda_i}$')
     plt.ylabel(r'rank index')
     plt.savefig('le_spectrum.pdf')
+
+def reconstruct_coupling_params(bundle):
+    """ Try to reconstruct A and B from observed data
+    """
+    c = bundle.system_config
+    sol = bundle.single_sol.T
+    dim = c.A.shape[0]**2 + c.A.shape[0]
+
+    # select time points to sample at
+    t_points = random.sample(
+        range(int(3/4*len(bundle.ts)), len(bundle.ts)), dim)
+
+    # create coefficient matrix
+    a = np.empty((dim, dim))#, dtype='|S5')
+    subs = list(itertools.product(range(c.A.shape[0]), repeat=2))
+    for i in range(dim):
+        t = t_points.pop()
+        theta = sol[t]
+        print(t, theta)
+
+        for j in range(dim):
+            if j < c.A.shape[0]**2: # fill A_ij
+                si, sj = subs[j]
+                a[i, j] = np.cos(theta[si] - theta[sj])
+                #a[i, j] = 'A_{}{}'.format(si, sj)
+            else: # fill B_i
+                si = j - c.A.shape[0]**2
+
+                if i % c.A.shape[0] == j % c.A.shape[0]:
+                    a[i, j] = np.sin(c.Phi(t) - theta[si])
+                    #a[i, j] = 'B_{}'.format(si)
+                else:
+                    a[i, j] = 0
+
+    print(a)
+    print(np.linalg.det(a))
+
+    # create LHS vector
+    b = np.ones((dim,)) * (c.OMEGA - c.o_vec[0])
+
+    # solve system
+    x = np.linalg.solve(a, b)
+
+    #print(a, b, x)
+    print('Original B:', c.B)
+    print('Reconstructed B:', x[-2:])

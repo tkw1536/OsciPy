@@ -71,6 +71,7 @@ def handle_solution(bundle):
 
     # further investigations
     mean_var = np.mean(bundle.var_sers, axis=0)
+    reconstruct_coupling_params(bundle)
 
     # plot results
     data = DictWrapper({
