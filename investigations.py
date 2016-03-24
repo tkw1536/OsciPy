@@ -81,18 +81,18 @@ def reconstruct_coupling_params(bundle):
     dim = c.A.shape[0]**2 + c.A.shape[0]
 
     # select time points to sample at
+    sample_size = 200
     t_points = random.sample(
-        range(int(3/4*len(bundle.ts)), len(bundle.ts)), dim)
+        range(int(3/4*len(bundle.ts)), len(bundle.ts)), sample_size)
 
     # create coefficient matrix
-    a = np.empty((dim, dim))#, dtype='|S5')
+    a = np.empty((sample_size, dim))#, dtype='|S5')
     subs = list(itertools.product(range(c.A.shape[0]), repeat=2))
-    for i in range(dim):
+    for i in range(a.shape[0]):
         t = t_points.pop()
         theta = sol[t]
-        print(t, theta)
 
-        for j in range(dim):
+        for j in range(a.shape[1]):
             if j < c.A.shape[0]**2: # fill A_ij
                 si, sj = subs[j]
                 a[i, j] = np.cos(theta[si] - theta[sj])
@@ -106,14 +106,11 @@ def reconstruct_coupling_params(bundle):
                 else:
                     a[i, j] = 0
 
-    print(a)
-    print(np.linalg.det(a))
-
     # create LHS vector
-    b = np.ones((dim,)) * (c.OMEGA - c.o_vec[0])
+    b = np.ones(sample_size) * (c.OMEGA - c.o_vec[0])
 
     # solve system
-    x = np.linalg.solve(a, b)
+    x = np.linalg.lstsq(a, b)[0]
 
     #print(a, b, x)
     print('Original B:', c.B)
