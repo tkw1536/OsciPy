@@ -91,7 +91,7 @@ def plot_result(data):
 
     plot_graph(data.graph, plt.subplot(gs[:, 0]))
     plot_matrix(data.syncs, plt.subplot(gs[:, 1]))
-    plot_evolutions(data.sol, data.ts, plt.subplot(gs[0, 2]))
+    plot_evolutions(data.sols[0], data.ts, plt.subplot(gs[0, 2]))
     plot_correlation_matrix(data.cmats, data.ts, plt.subplot(gs[1, 2]))
 
     plt.tight_layout()
@@ -102,7 +102,7 @@ def plot_result(data):
     fig = plt.figure(figsize=(20, 10))
     gs = mpl.gridspec.GridSpec(2, 1)
 
-    plot_evolutions(data.sol, data.ts, plt.subplot(gs[0]))
+    plot_evolutions(data.sols[0], data.ts, plt.subplot(gs[0]))
     plot_series(data.vser, data.ts, plt.subplot(gs[1]))
 
     plt.tight_layout()

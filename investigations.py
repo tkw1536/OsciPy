@@ -77,20 +77,26 @@ def reconstruct_coupling_params(bundle):
     """ Try to reconstruct A and B from observed data
     """
     c = bundle.system_config
-    sol = bundle.single_sol.T
     dim = c.A.shape[0]**2 + c.A.shape[0]
 
-    # select time points to sample at
+    # aggregate solution data
+    aggr_sols = []
     sample_size = 200
-    t_points = random.sample(
-        range(int(3/4*len(bundle.ts)), len(bundle.ts)), sample_size)
+    for sol in bundle.all_sols:
+        #t_points = random.sample(
+        #    range(int(3/4*len(bundle.ts)), len(bundle.ts)), sample_size)
+        t_points = random.sample(range(len(bundle.ts)), sample_size)
+
+        slices = sol.T[t_points]
+        aggr_sols.extend(zip(slices, bundle.ts[t_points]))
+
+    print('Using', len(aggr_sols), 'data points to solve system')
 
     # create coefficient matrix
     a = np.empty((sample_size, dim))#, dtype='|S5')
     subs = list(itertools.product(range(c.A.shape[0]), repeat=2))
     for i in range(a.shape[0]):
-        t = t_points.pop()
-        theta = sol[t]
+        theta, t = aggr_sols.pop()
 
         for j in range(a.shape[1]):
             if j < c.A.shape[0]**2: # fill A_ij
@@ -112,6 +118,9 @@ def reconstruct_coupling_params(bundle):
     # solve system
     x = np.linalg.lstsq(a, b)[0]
 
-    #print(a, b, x)
+    # show result
+    print('Original A:\n', c.A)
+    print('Reconstructed A:\n', x[:-c.A.shape[0]].reshape((2,2)))
+    print()
     print('Original B:', c.B)
-    print('Reconstructed B:', x[-2:])
+    print('Reconstructed B:', x[-c.A.shape[0]:])

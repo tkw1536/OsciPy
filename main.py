@@ -44,6 +44,7 @@ def simulate_system(bundle, reps=50):
     # solve system on network
     corr_mats = []
     var_sers = []
+    all_sols = []
     for _ in trange(reps):
         sols, ts = solve_system(bundle.system_config)
 
@@ -52,8 +53,9 @@ def simulate_system(bundle, reps=50):
 
         corr_mats.append(cmat)
         var_sers.append(vser)
+        all_sols.append(sols)
 
-    bundle['single_sol'] = sols
+    bundle['all_sols'] = all_sols
     bundle['corr_mats'] = np.array(corr_mats)
     bundle['var_sers'] = np.array(var_sers)
     bundle['ts'] = ts
@@ -78,7 +80,7 @@ def handle_solution(bundle):
         'graph': bundle.graph,
         'syncs': sync_time,
         'cmats': mean_time,
-        'sol': bundle.single_sol,
+        'sols': bundle.all_sols,
         'ts': bundle.ts,
         'vser': mean_var
     })
