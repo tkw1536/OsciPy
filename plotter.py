@@ -10,14 +10,14 @@ import matplotlib.pylab as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
-def plot_matrix(mat, ax, title=None):
+def plot_matrix(mat, ax, title=None, allow_negative=True):
     """ Plot system evolution
     """
     cmap = plt.cm.coolwarm
     cmap.set_under('white')
 
     im = ax.imshow(
-        mat, vmin=0,
+        mat, vmin=np.min(mat) if allow_negative else 0,
         interpolation='nearest', cmap=cmap)
 
     divider = make_axes_locatable(ax)
@@ -94,7 +94,8 @@ def plot_result(data):
         data.graph, plt.subplot(gs[:, 0]))
     plot_matrix(
         data.syncs, plt.subplot(gs[:, 1]),
-        title='Sign-switch of dynamic connectivity matrix')
+        title='Sign-switch of dynamic connectivity matrix',
+        allow_negative=False)
     plot_evolutions(
         data.sols[0], data.ts, plt.subplot(gs[0, 2]))
     plot_correlation_matrix(
