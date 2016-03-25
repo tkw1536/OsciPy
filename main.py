@@ -80,7 +80,7 @@ def handle_solution(bundle):
     data = DictWrapper({
         'graph': bundle.graph,
         'syncs': sync_time,
-        'cmats': mean_time,
+        'cmats': bundle.corr_mats,
         'sols': bundle.all_sols,
         'ts': bundle.ts,
         'vser': mean_var

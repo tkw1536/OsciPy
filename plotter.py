@@ -10,7 +10,7 @@ import matplotlib.pylab as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
-def plot_matrix(mat, ax):
+def plot_matrix(mat, ax, title=None):
     """ Plot system evolution
     """
     cmap = plt.cm.coolwarm
@@ -27,7 +27,8 @@ def plot_matrix(mat, ax):
     ax.set_xlabel(r'$i$')
     ax.set_ylabel(r'$j$')
 
-    ax.set_title('Sign-switch of dynamic connectivity matrix')
+    if not title is None:
+        ax.set_title(title)
 
 def plot_graph(graph, ax):
     """ Plot graph
@@ -89,10 +90,15 @@ def plot_result(data):
     fig = plt.figure(figsize=(30, 10))
     gs = mpl.gridspec.GridSpec(2, 3, width_ratios=[1, 1, 2])
 
-    plot_graph(data.graph, plt.subplot(gs[:, 0]))
-    plot_matrix(data.syncs, plt.subplot(gs[:, 1]))
-    plot_evolutions(data.sols[0], data.ts, plt.subplot(gs[0, 2]))
-    plot_correlation_matrix(data.cmats, data.ts, plt.subplot(gs[1, 2]))
+    plot_graph(
+        data.graph, plt.subplot(gs[:, 0]))
+    plot_matrix(
+        data.syncs, plt.subplot(gs[:, 1]),
+        title='Sign-switch of dynamic connectivity matrix')
+    plot_evolutions(
+        data.sols[0], data.ts, plt.subplot(gs[0, 2]))
+    plot_correlation_matrix(
+        np.mean(data.cmats, axis=0), data.ts, plt.subplot(gs[1, 2]))
 
     plt.tight_layout()
     fig.savefig('result.pdf')
@@ -108,3 +114,15 @@ def plot_result(data):
     plt.tight_layout()
     fig.savefig('cluster_num.pdf')
     fig.savefig('bar.png')
+
+    # correlation matrix heatmap
+    fig = plt.figure()
+
+    cmat_sum = np.sum(np.mean(data.cmats, axis=0), axis=2)
+    plot_matrix(
+        cmat_sum, plt.gca(),
+        title='Summed correlation matrix')
+
+    plt.tight_layout()
+    fig.savefig('correlation_matrix.pdf')
+    fig.savefig('baz.png')
