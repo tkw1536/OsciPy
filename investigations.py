@@ -95,34 +95,30 @@ def reconstruct_coupling_params(bundle):
     print('Using', sol_dim, 'data points to solve system of', syst_dim, 'variables')
 
     # create coefficient matrix
-    a = np.empty((sol_dim, syst_dim))#, dtype='|S5')
-    subs = list(itertools.product(range(c.A.shape[0]), repeat=2))
-    for i in range(a.shape[0]):
-        theta, t = aggr_sols.pop()
+    a = np.empty((sol_dim, syst_dim))
+    for theta, t in aggr_sols:
+        for i in range(c.A.shape[0]):
+            coeffs_A = np.zeros(c.A.shape)
+            for j in range(c.A.shape[1]):
+                coeffs_A[i,j] = np.cos(theta[i] - theta[j])
 
-        for j in range(a.shape[1]):
-            if j < c.A.shape[0]**2: # fill A_ij
-                si, sj = subs[j]
-                a[i, j] = np.cos(theta[si] - theta[sj])
-                #a[i, j] = 'A_{}{}'.format(si, sj)
-            else: # fill B_i
-                si = j - c.A.shape[0]**2
+            coeffs_B = np.zeros(c.A.shape[0])
+            coeffs_B[i] = np.sin(c.Phi(t) - theta[i])
 
-                if i % c.A.shape[0] == j % c.A.shape[0]:
-                    a[i, j] = np.sin(c.Phi(t) - theta[si])
-                    #a[i, j] = 'B_{}'.format(si)
-                else:
-                    a[i, j] = 0
+            row = np.hstack((coeffs_A.reshape(c.A.shape[0]**2), coeffs_B))
+            a[i,:] = row
 
-    # create LHS vector
+    # compute LHS vector
     b = np.ones(sol_dim) * (c.OMEGA - c.o_vec[0])
 
     # solve system
     x = np.linalg.lstsq(a, b)[0]
+    rec_a = x[:-c.A.shape[0]].reshape(c.A.shape)
+    rec_b = x[-c.A.shape[0]:]
 
     # show result
     print('Original A:\n', c.A)
-    print('Reconstructed A:\n', x[:-c.A.shape[0]].reshape(c.A.shape))
+    print('Reconstructed A:\n', rec_a)
     print()
     print('Original B:', c.B)
-    print('Reconstructed B:', x[-c.A.shape[0]:])
+    print('Reconstructed B:', rec_b)
