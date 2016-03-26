@@ -10,14 +10,14 @@ import matplotlib.pylab as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
-def plot_matrix(mat, ax):
+def plot_matrix(mat, ax, title=None, allow_negative=True):
     """ Plot system evolution
     """
     cmap = plt.cm.coolwarm
     cmap.set_under('white')
 
     im = ax.imshow(
-        mat, vmin=0,
+        mat, vmin=np.min(mat) if allow_negative else 0,
         interpolation='nearest', cmap=cmap)
 
     divider = make_axes_locatable(ax)
@@ -27,7 +27,8 @@ def plot_matrix(mat, ax):
     ax.set_xlabel(r'$i$')
     ax.set_ylabel(r'$j$')
 
-    ax.set_title('Sign-switch of dynamic connectivity matrix')
+    if not title is None:
+        ax.set_title(title)
 
 def plot_graph(graph, ax):
     """ Plot graph
@@ -58,6 +59,11 @@ def plot_evolutions(sols, ts, ax):
         sols, aspect='auto',
         cmap=plt.cm.gray, interpolation='nearest')
 
+    # let x-labels correspond to actual time steps
+    ts = np.append(ts, ts[-1]+(ts[-1]-ts[-2]))
+    formatter = plt.FuncFormatter(lambda x, pos: int(ts[x]))
+    ax.xaxis.set_major_formatter(formatter)
+
     ax.set_xlabel(r'$t$')
     ax.set_ylabel(r'$\Theta_i$')
 
@@ -87,10 +93,16 @@ def plot_result(data):
     fig = plt.figure(figsize=(30, 10))
     gs = mpl.gridspec.GridSpec(2, 3, width_ratios=[1, 1, 2])
 
-    plot_graph(data.graph, plt.subplot(gs[:, 0]))
-    plot_matrix(data.syncs, plt.subplot(gs[:, 1]))
-    plot_evolutions(data.sol, data.ts, plt.subplot(gs[0, 2]))
-    plot_correlation_matrix(data.cmats, data.ts, plt.subplot(gs[1, 2]))
+    plot_graph(
+        data.graph, plt.subplot(gs[:, 0]))
+    plot_matrix(
+        data.syncs, plt.subplot(gs[:, 1]),
+        title='Sign-switch of dynamic connectivity matrix',
+        allow_negative=False)
+    plot_evolutions(
+        data.sols[0], data.ts, plt.subplot(gs[0, 2]))
+    plot_correlation_matrix(
+        np.mean(data.cmats, axis=0), data.ts, plt.subplot(gs[1, 2]))
 
     plt.tight_layout()
     fig.savefig('result.pdf')
@@ -100,9 +112,21 @@ def plot_result(data):
     fig = plt.figure(figsize=(20, 10))
     gs = mpl.gridspec.GridSpec(2, 1)
 
-    plot_evolutions(data.sol, data.ts, plt.subplot(gs[0]))
+    plot_evolutions(data.sols[0], data.ts, plt.subplot(gs[0]))
     plot_series(data.vser, data.ts, plt.subplot(gs[1]))
 
     plt.tight_layout()
     fig.savefig('cluster_num.pdf')
     fig.savefig('bar.png')
+
+    # correlation matrix heatmap
+    fig = plt.figure()
+
+    cmat_sum = np.sum(np.mean(data.cmats, axis=0), axis=2)
+    plot_matrix(
+        cmat_sum, plt.gca(),
+        title='Summed correlation matrix')
+
+    plt.tight_layout()
+    fig.savefig('correlation_matrix.pdf')
+    fig.savefig('baz.png')

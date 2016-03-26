@@ -13,110 +13,82 @@ from utils import solve_system, DictWrapper
 
 import plotter
 import generators
+import investigations
 
 import matplotlib.pylab as plt
 
-def compute_correlation_matrix(sols):
-    """ Compute pairwise node-correlations of solution
+def setup_system(size=4):
+    """ All system configurations go here
     """
-    cmat = np.empty((sols.shape[0], sols.shape[0], sols.shape[1]))
-    for i, sol in enumerate(sols):
-        for j, osol in enumerate(sols):
-            cmat[i, j] = np.cos(sol - osol)
-    return cmat
-
-def compute_dcm(corr_mat):
-    """ Compute dynamic connectivity matrix
-    """
-    dcm = []
-    for thres in [0.9]: #np.linspace(0, 1, 5):
-        cur_mat = corr_mat > thres
-        dcm.append(cur_mat)
-    return dcm[0]
-
-def compute_sync_time(dcm, ts):
-    """ Compute time it takes to synchronize from DCM
-    """
-    sync_time = -np.ones((dcm.shape[0], dcm.shape[0]))
-    for t, state in enumerate(dcm.T):
-        inds = np.argwhere((state == 1) & (sync_time < 0))
-        sync_time[tuple(inds.T)] = ts[t]
-    return sync_time
-
-def compute_cluster_num(sols, graph_size, thres=.05):
-    """ Compute pairwise node-variances of solution
-    """
-    series = []
-    for t, state in enumerate(sols.T):
-        # compute sine sum
-        sin_sum = 0
-        for i_theta in state:
-            for j_theta in state:
-                sin = np.sin(i_theta - j_theta)**2
-                if sin > thres:
-                    sin_sum += sin
-
-        # compute actual value 'c'
-        c = graph_size**2 / (graph_size**2 - 2 * sin_sum)
-
-        series.append(c)
-    return series
-
-def investigate_laplacian(graph):
-    """ Compute Laplacian
-    """
-    w = nx.laplacian_spectrum(graph)
-
-    pairs = []
-    for i, w in enumerate(sorted(w)):
-        if abs(w) < 1e-5: continue
-        inv_w = 1 / w
-        pairs.append((inv_w, i))
-
-    plt.figure()
-    plt.scatter(*zip(*pairs))
-    plt.xlabel(r'$\frac{1}{\lambda_i}$')
-    plt.ylabel(r'rank index')
-    plt.savefig('le_spectrum.pdf')
-
-def simulate_system(size, reps=50):
-    """ Have fun :-)
-    """
+    
+    # setup network
     graph = generators.generate_graph(size)
-    investigate_laplacian(graph)
+    investigations.investigate_laplacian(graph)
 
-    adjacency_matrix = nx.to_numpy_matrix(graph)
-    omega_vec = np.ones((len(graph.nodes()),)) * 2
+    # setup dynamical system
+    omega = 0.2
+    OMEGA = 3
+    dim = len(graph.nodes())
+    system_config = DictWrapper({
+        'A': nx.to_numpy_matrix(graph),
+        'B': np.ones((dim,)),
+        'o_vec': np.ones((dim,)) * omega,
+        'Phi': lambda t: OMEGA * t,
+        'OMEGA': OMEGA
+    })
 
+    return DictWrapper({
+        'graph': graph,
+        'system_config': system_config
+    })
+
+def simulate_system(bundle, reps=50):
+    """ Generate data from system setup
+    """
+    # lonely investigation :'(
+    investigations.investigate_laplacian(bundle.graph)
+
+    # solve system on network
     corr_mats = []
     var_sers = []
+    all_sols = []
     for _ in trange(reps):
-        sols, ts = solve_system(omega_vec, adjacency_matrix)
+        sols, ts = solve_system(bundle.system_config)
 
-        cmat = compute_correlation_matrix(sols.T)
-        vser = compute_cluster_num(sols.T, len(graph.nodes()))
+        cmat = investigations.compute_correlation_matrix(sols)
+        vser = investigations.compute_cluster_num(sols, len(bundle.graph.nodes()))
 
         corr_mats.append(cmat)
         var_sers.append(vser)
-    corr_mats = np.array(corr_mats)
-    var_sers = np.array(var_sers)
+        all_sols.append(sols)
 
+    bundle['all_sols'] = all_sols
+    bundle['corr_mats'] = np.array(corr_mats)
+    bundle['var_sers'] = np.array(var_sers)
+    bundle['ts'] = ts
+
+    return bundle
+
+def handle_solution(bundle):
+    """ Investigate previously generated data
+    """
     # compute synchronization offsets
-    mean_time = np.mean(corr_mats, axis=0)
-    dcm = compute_dcm(mean_time)
-    sync_time = compute_sync_time(dcm, ts)
+    mean_time = np.mean(bundle.corr_mats, axis=0)
+    dcm = investigations.compute_dcm(mean_time)
+    sync_time = investigations.compute_sync_time(dcm, bundle.ts)
     #print(sync_time)
 
     # further investigations
-    mean_var = np.mean(var_sers, axis=0)
+    mean_var = np.mean(bundle.var_sers, axis=0)
+    investigations.reconstruct_coupling_params(bundle)
 
     # plot results
     data = DictWrapper({
-        'graph': graph,
+        'graph': bundle.graph,
         'syncs': sync_time,
-        'cmats': mean_time,
-        'sol': sols.T,
-        'ts': ts,
+        'cmats': bundle.corr_mats,
+        'sols': bundle.all_sols,
+        'ts': bundle.ts,
         'vser': mean_var
     })
     plotter.plot_result(data)
@@ -131,11 +103,12 @@ def main(args):
     Returns:
         an integer representing the return code
     """
+
+    bundle = setup_system()
+
+    bundle = simulate_system(bundle)
+    handle_solution(bundle)
     
-    # just simulate the system
-    simulate_system(4)
-    
-    # we always finish ok
     return 0
 
 if __name__ == '__main__':

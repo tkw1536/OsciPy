@@ -17,29 +17,30 @@ class DictWrapper(dict):
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
-def generate_system(omega_vec, A):
+def generate_system(omega_vec, A, B, Phi):
     """ Generate generalized Kuramoto model
     """
-    def func(state, t=0):
+    def func(theta, t=0):
         ode = []
-        for i, o in enumerate(omega_vec):
+        for i, omega in enumerate(omega_vec):
             ode.append(
-                o + np.sum(
-                    [A[i,j] * np.sin(state[j] - state[i])
-                        for j in range(len(omega_vec))])
+                omega \
+                + np.sum([A[i,j] * np.sin(theta[j] - theta[i])
+                    for j in range(len(omega_vec))]) \
+                + B[i] * np.sin(Phi(t) - theta[i])
             )
         return np.array(ode)
     return func
 
-def solve_system(O, A, tmax=20, dt=0.01):
+def solve_system(conf, tmax=20, dt=0.01):
     """ Solve particular configuration
     """
-    func = generate_system(O, A)
+    func = generate_system(conf.o_vec, conf.A, conf.B, conf.Phi)
 
     ts = np.arange(0, tmax, dt)
-    init = npr.uniform(0, 2*np.pi, size=O.shape)
+    init = npr.uniform(0, 2*np.pi, size=conf.o_vec.shape)
 
-    sol = odeint(func, init, ts)
+    sol = odeint(func, init, ts).T
     sol %= 2*np.pi
 
     return sol, ts
